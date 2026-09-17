@@ -1,0 +1,80 @@
+:root {
+    --ink: #17202e;
+    --ink-soft: #55607a;
+    --paper: #f7f6f3;
+    --line: #dcd9d2;
+    --accent: #1d4ed8;
+    --ok: #16733f;
+    --warn: #9a6700;
+    --bad: #a32020;
+}
+
+body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+.app-header {
+    background: var(--ink);
+    color: #fff;
+    padding: .75rem 0;
+}
+
+.app-header .brand {
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.1rem;
+    text-decoration: none;
+    letter-spacing: .01em;
+}
+
+.app-header .nav-link {
+    color: rgba(255, 255, 255, .78);
+    padding: .25rem .75rem;
+}
+
+.app-header .nav-link:hover {
+    color: #fff;
+}
+
+.user-chip {
+    font-size: .85rem;
+    color: rgba(255, 255, 255, .8);
+}
+
+.app-footer {
+    border-top: 1px solid var(--line);
+    padding: 1.25rem 0;
+    color: var(--ink-soft);
+    font-size: .85rem;
+}
+
+.panel {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1.25rem;
+}
+
+.stat-number {
+    font-size: 2.25rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.badge-status-wolna { color: var(--ok); }
+.badge-status-zajeta { color: var(--bad); }
+.badge-status-konserwacja { color: var(--warn); }
+
+table.table-rooms td, table.table-rooms th { vertical-align: middle; }
+
+.equipment-tag {
+    display: inline-block;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: .05rem .4rem;
+    font-size: .78rem;
+    color: var(--ink-soft);
+    margin-right: .25rem;
+}

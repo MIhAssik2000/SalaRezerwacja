@@ -1,0 +1,47 @@
+@{
+    ViewData["Title"] = "Import planu zajęć";
+    var problems = ViewBag.Problems as List<string>;
+}
+
+<h1 class="h4 mb-3">Import planu zajęć</h1>
+
+<div class="row">
+    <div class="col-md-7">
+        <div class="panel">
+            <form method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="mb-3">
+                    <label class="form-label">Plik kalendarza (.ics)</label>
+                    <input type="file" name="file" accept=".ics" class="form-control" />
+                    <div class="form-text">
+                        Plik wyeksportowany z uczelnianego planu zajęć. Sala rozpoznawana jest
+                        po polu LOCATION porównanym z numerem lub nazwą sali w bazie.
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Importuj</button>
+            </form>
+
+            @if (problems != null && problems.Any())
+            {
+                <hr />
+                <h2 class="h6">Pominięte wydarzenia</h2>
+                <ul class="small text-muted">
+                    @foreach (var p in problems.Take(50))
+                    {
+                        <li>@p</li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="panel">
+            <h2 class="h6">Jak to działa</h2>
+            <p class="small text-muted mb-0">
+                Zaimportowane zajęcia trafiają do kalendarza jako wpisy o źródle „plan zajęć”
+                i blokują możliwość rezerwacji sali w tych godzinach. Powtórny import tego samego
+                pliku nie tworzy duplikatów.
+            </p>
+        </div>
+    </div>
+</div>

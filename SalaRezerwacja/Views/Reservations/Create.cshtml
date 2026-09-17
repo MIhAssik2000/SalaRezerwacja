@@ -1,0 +1,112 @@
+@model ReservationCreateViewModel
+@{
+    ViewData["Title"] = "Nowa rezerwacja";
+}
+
+<h1 class="h4 mb-3">Nowa rezerwacja</h1>
+
+<div class="row">
+    <div class="col-md-7">
+        <div class="panel">
+            <form method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small"></div>
+
+                <div class="mb-3">
+                    <label asp-for="RoomId" class="form-label"></label>
+                    <select asp-for="RoomId" class="form-select" id="roomSelect">
+                        <option value="0">— wybierz salę —</option>
+                        @foreach (var room in Model.Rooms)
+                        {
+                            <option value="@room.Id" selected="@(Model.RoomId == room.Id)"
+                                    data-limit="@room.MaxReservationMinutes">
+                                @room.Building?.Name — @room.Name (@room.Number), @room.Capacity miejsc
+                            </option>
+                        }
+                    </select>
+                    <div class="form-text" id="limitInfo"></div>
+                    <span asp-validation-for="RoomId" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Title" class="form-label"></label>
+                    <input asp-for="Title" class="form-control" placeholder="np. konsultacje, koło naukowe, obrona" />
+                    <span asp-validation-for="Title" class="text-danger small"></span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label asp-for="Date" class="form-label"></label>
+                        <input asp-for="Date" type="date" class="form-control" />
+                        <span asp-validation-for="Date" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="FromTime" class="form-label"></label>
+                        <input asp-for="FromTime" type="time" class="form-control" id="fromTime" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="ToTime" class="form-label"></label>
+                        <input asp-for="ToTime" type="time" class="form-control" id="toTime" />
+                        <span asp-validation-for="ToTime" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">Zarezerwuj</button>
+                    <a class="btn btn-outline-secondary" asp-controller="Rooms" asp-action="Index">Wróć do listy sal</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="panel">
+            <h2 class="h6">Zasady rezerwacji</h2>
+            <ul class="small text-muted mb-0 ps-3">
+                <li>Każda sala ma własny limit długości pojedynczej rezerwacji.</li>
+                <li>Terminy nie mogą się nakładać — system sprawdza to przy zapisie.</li>
+                <li>Sale w konserwacji są niedostępne.</li>
+                <li>Potwierdzenie przychodzi e-mailem, przypomnienie — 24 h przed terminem.</li>
+                <li>Rezerwację można anulować do momentu jej rozpoczęcia.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Podpowiadamy limit czasu wybranej sali i ostrzegamy przed jego przekroczeniem.
+        const roomSelect = document.getElementById('roomSelect');
+        const fromTime = document.getElementById('fromTime');
+        const toTime = document.getElementById('toTime');
+        const limitInfo = document.getElementById('limitInfo');
+
+        function minutes(value) {
+            if (!value) return null;
+            const [h, m] = value.split(':').map(Number);
+            return h * 60 + m;
+        }
+
+        function refresh() {
+            const option = roomSelect.selectedOptions[0];
+            const limit = option ? parseInt(option.dataset.limit || '0', 10) : 0;
+            if (!limit) { limitInfo.textContent = ''; return; }
+
+            const start = minutes(fromTime.value);
+            const end = minutes(toTime.value);
+            let text = 'Maksymalny czas rezerwacji tej sali: ' + limit + ' min.';
+
+            if (start !== null && end !== null && end > start) {
+                const duration = end - start;
+                text += ' Wybrany termin: ' + duration + ' min.';
+                limitInfo.className = duration > limit ? 'form-text text-danger' : 'form-text';
+            } else {
+                limitInfo.className = 'form-text';
+            }
+            limitInfo.textContent = text;
+        }
+
+        [roomSelect, fromTime, toTime].forEach(el => el.addEventListener('change', refresh));
+        refresh();
+    </script>
+}

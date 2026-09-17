@@ -1,0 +1,77 @@
+@model List<Reservation>
+@{
+    ViewData["Title"] = "Rezerwacje";
+    var showAll = (bool)(ViewBag.ShowAll ?? false);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">@(showAll ? "Wszystkie rezerwacje" : "Moje rezerwacje")</h1>
+    <div class="d-flex gap-2">
+        @if (User.IsInRole(Roles.Administracja))
+        {
+            <a class="btn btn-outline-secondary btn-sm" asp-action="Index" asp-route-all="@(!showAll)">
+                @(showAll ? "Pokaż tylko moje" : "Pokaż wszystkie")
+            </a>
+        }
+        <a class="btn btn-primary btn-sm" asp-action="Create">Nowa rezerwacja</a>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="panel">
+        <p class="mb-2">Nie masz jeszcze żadnych rezerwacji.</p>
+        <a class="btn btn-primary btn-sm" asp-action="Create">Zarezerwuj salę</a>
+    </div>
+}
+else
+{
+    <div class="panel p-0">
+        <table class="table mb-0">
+            <thead>
+            <tr>
+                <th>Termin</th>
+                <th>Sala</th>
+                <th>Cel</th>
+                @if (showAll) { <th>Rezerwujący</th> }
+                <th>Status</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var r in Model)
+            {
+                <tr>
+                    <td>
+                        @r.StartTime.ToString("dd.MM.yyyy HH:mm") – @r.EndTime.ToString("HH:mm")
+                        <div class="text-muted small">@r.DurationMinutes.ToString("0") min</div>
+                    </td>
+                    <td>
+                        <a asp-controller="Rooms" asp-action="Details" asp-route-id="@r.RoomId">@r.Room?.Name</a>
+                        <div class="text-muted small">@r.Room?.Number · @r.Room?.Building?.Name</div>
+                    </td>
+                    <td>
+                        @r.Title
+                        @if (r.Source == ReservationSource.PlanZajec)
+                        {
+                            <span class="equipment-tag">plan zajęć</span>
+                        }
+                    </td>
+                    @if (showAll) { <td>@r.User?.FullName</td> }
+                    <td>@r.Status</td>
+                    <td class="text-end">
+                        @if (r.CanBeCancelled)
+                        {
+                            <form method="post" asp-action="Cancel" asp-route-id="@r.Id"
+                                  onsubmit="return confirm('Anulować tę rezerwację?');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Anuluj</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

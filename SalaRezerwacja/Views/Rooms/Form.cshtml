@@ -1,0 +1,100 @@
+@model RoomFormViewModel
+@{
+    var isEdit = Model.Id != 0;
+    ViewData["Title"] = isEdit ? "Edycja sali" : "Nowa sala";
+}
+
+<h1 class="h4 mb-3">@(isEdit ? "Edycja sali" : "Nowa sala")</h1>
+
+<div class="panel">
+    <form method="post" asp-action="@(isEdit ? "Edit" : "Create")">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label asp-for="Name" class="form-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger small"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Number" class="form-label"></label>
+                <input asp-for="Number" class="form-control" />
+                <span asp-validation-for="Number" class="text-danger small"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Floor" class="form-label"></label>
+                <input asp-for="Floor" type="number" class="form-control" />
+            </div>
+
+            <div class="col-md-4">
+                <label asp-for="BuildingId" class="form-label"></label>
+                <select asp-for="BuildingId" class="form-select">
+                    @foreach (var b in Model.Buildings)
+                    {
+                        <option value="@b.Id" selected="@(Model.BuildingId == b.Id)">@b.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label asp-for="Capacity" class="form-label"></label>
+                <input asp-for="Capacity" type="number" class="form-control" />
+                <span asp-validation-for="Capacity" class="text-danger small"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Type" class="form-label"></label>
+                <select asp-for="Type" asp-items="Html.GetEnumSelectList<RoomType>()" class="form-select"></select>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Status" class="form-label"></label>
+                <select asp-for="Status" asp-items="Html.GetEnumSelectList<RoomStatus>()" class="form-select"></select>
+            </div>
+
+            <div class="col-md-4">
+                <label asp-for="MaxReservationMinutes" class="form-label"></label>
+                <input asp-for="MaxReservationMinutes" type="number" class="form-control" />
+                <div class="form-text">Dłuższej pojedynczej rezerwacji system nie przyjmie.</div>
+                <span asp-validation-for="MaxReservationMinutes" class="text-danger small"></span>
+            </div>
+            <div class="col-md-8">
+                <label asp-for="OpiekunId" class="form-label"></label>
+                <select asp-for="OpiekunId" class="form-select">
+                    <option value="">— nie przypisano —</option>
+                    @foreach (var u in Model.Opiekunowie)
+                    {
+                        <option value="@u.Id" selected="@(Model.OpiekunId == u.Id)">@u.FullName (@u.Email)</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-12">
+                <label class="form-label">Wyposażenie</label>
+                <div>
+                    @foreach (var e in Model.AllEquipment)
+                    {
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="EquipmentIds" value="@e.Id"
+                                   id="feq-@e.Id" checked="@(Model.EquipmentIds != null && Model.EquipmentIds.Contains(e.Id))" />
+                            <label class="form-check-label" for="feq-@e.Id">@e.Name</label>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="col-12">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">@(isEdit ? "Zapisz zmiany" : "Dodaj salę")</button>
+            <a class="btn btn-outline-secondary" asp-action="Index">Anuluj</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

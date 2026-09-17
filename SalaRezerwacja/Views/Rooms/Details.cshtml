@@ -1,0 +1,86 @@
+@model Room
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-0">@Model.Name</h1>
+        <div class="text-muted">@Model.Number · @Model.Building?.Name, piętro @Model.Floor</div>
+    </div>
+    <div class="d-flex gap-2">
+        @if (User.IsInRole(Roles.Opiekun) || User.IsInRole(Roles.Administracja))
+        {
+            <a class="btn btn-outline-secondary btn-sm" asp-action="Edit" asp-route-id="@Model.Id">Edytuj salę</a>
+        }
+        @if (Model.Status != RoomStatus.Konserwacja)
+        {
+            <a class="btn btn-primary btn-sm" asp-controller="Reservations" asp-action="Create" asp-route-roomId="@Model.Id">Zarezerwuj</a>
+        }
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-5">
+        <div class="panel">
+            <dl class="mb-0">
+                <dt>Pojemność</dt>
+                <dd>@Model.Capacity miejsc</dd>
+                <dt>Typ sali</dt>
+                <dd>@Model.Type</dd>
+                <dt>Dostępność</dt>
+                <dd class="badge-status-@Model.Status.ToString().ToLower()">@Model.Status</dd>
+                <dt>Maksymalny czas rezerwacji</dt>
+                <dd>@Model.MaxReservationMinutes minut</dd>
+                <dt>Opiekun sali</dt>
+                <dd>@(Model.Opiekun?.FullName ?? "nie przypisano")</dd>
+                <dt>Wyposażenie</dt>
+                <dd>
+                    @if (!Model.RoomEquipments.Any())
+                    {
+                        <span class="text-muted">brak</span>
+                    }
+                    else
+                    {
+                        foreach (var re in Model.RoomEquipments)
+                        {
+                            <span class="equipment-tag">@re.Equipment?.Name</span>
+                        }
+                    }
+                </dd>
+                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                {
+                    <dt>Uwagi</dt>
+                    <dd>@Model.Description</dd>
+                }
+            </dl>
+        </div>
+    </div>
+    <div class="col-md-7">
+        <div class="panel">
+            <h2 class="h6">Najbliższe rezerwacje</h2>
+            @if (!Model.Reservations.Any())
+            {
+                <p class="text-muted mb-0">Sala jest wolna — brak zaplanowanych rezerwacji.</p>
+            }
+            else
+            {
+                <table class="table table-sm mb-0">
+                    <thead>
+                    <tr><th>Termin</th><th>Cel</th><th>Rezerwujący</th></tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var r in Model.Reservations.OrderBy(r => r.StartTime))
+                    {
+                        <tr>
+                            <td>@r.StartTime.ToString("dd.MM.yyyy HH:mm") – @r.EndTime.ToString("HH:mm")</td>
+                            <td>@r.Title</td>
+                            <td>@r.User?.FullName</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>

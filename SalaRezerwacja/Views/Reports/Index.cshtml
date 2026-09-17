@@ -1,0 +1,106 @@
+@model ReportViewModel
+@{
+    ViewData["Title"] = "Raporty";
+}
+
+<h1 class="h4 mb-3">Wykorzystanie sal</h1>
+
+<div class="panel mb-3">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label">Od</label>
+            <input type="date" name="from" value="@Model.From.ToString("yyyy-MM-dd")" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Do</label>
+            <input type="date" name="to" value="@Model.To.ToString("yyyy-MM-dd")" class="form-control" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Budynek</label>
+            <select name="buildingId" class="form-select">
+                <option value="">— wszystkie —</option>
+                @foreach (var b in Model.Buildings)
+                {
+                    <option value="@b.Id" selected="@(Model.BuildingId == b.Id)">@b.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Pokaż</button>
+            <a class="btn btn-outline-secondary" asp-action="ExportCsv"
+               asp-route-from="@Model.From.ToString("yyyy-MM-dd")"
+               asp-route-to="@Model.To.ToString("yyyy-MM-dd")"
+               asp-route-buildingId="@Model.BuildingId">CSV</a>
+            <a class="btn btn-outline-secondary" asp-action="ExportPdf"
+               asp-route-from="@Model.From.ToString("yyyy-MM-dd")"
+               asp-route-to="@Model.To.ToString("yyyy-MM-dd")"
+               asp-route-buildingId="@Model.BuildingId">PDF</a>
+        </div>
+    </form>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-md-3">
+        <div class="panel h-100">
+            <div class="stat-number">@Model.TotalReservations</div>
+            <div class="text-muted small">rezerwacji w okresie</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="panel h-100">
+            <div class="stat-number">@Model.TotalHours</div>
+            <div class="text-muted small">godzin zajętości</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="panel h-100">
+            <div class="stat-number">@Model.TotalCancelled</div>
+            <div class="text-muted small">anulowanych rezerwacji</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="panel h-100">
+            <div class="small text-muted">Najczęściej używana</div>
+            <div class="fw-semibold">@(Model.MostUsed?.RoomName ?? "—")</div>
+            <div class="small text-muted mt-2">Najrzadziej używana</div>
+            <div class="fw-semibold">@(Model.LeastUsed?.RoomName ?? "—")</div>
+        </div>
+    </div>
+</div>
+
+<div class="panel p-0">
+    <table class="table mb-0">
+        <thead>
+        <tr>
+            <th>Sala</th>
+            <th>Budynek</th>
+            <th>Miejsc</th>
+            <th>Rezerwacji</th>
+            <th>Anulowanych</th>
+            <th>Godzin</th>
+            <th>Średnia długość</th>
+            <th>Wykorzystanie</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var row in Model.Rows)
+        {
+            <tr>
+                <td>@row.RoomName <span class="text-muted small">@row.RoomNumber</span></td>
+                <td>@row.BuildingName</td>
+                <td>@row.Capacity</td>
+                <td>@row.ReservationCount</td>
+                <td>@row.CancelledCount</td>
+                <td>@row.TotalHours</td>
+                <td>@row.AverageHours h</td>
+                <td>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar" style="width: @(Math.Min(row.UtilizationPercent, 100))%"></div>
+                    </div>
+                    <span class="small text-muted">@row.UtilizationPercent%</span>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

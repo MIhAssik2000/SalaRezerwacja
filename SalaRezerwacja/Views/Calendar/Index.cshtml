@@ -1,0 +1,116 @@
+@model RoomSearchViewModel
+@{
+    ViewData["Title"] = "Kalendarz zajętości";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">Kalendarz zajętości sal</h1>
+    @if (User.IsInRole(Roles.Administracja))
+    {
+        <a class="btn btn-outline-secondary btn-sm" asp-action="Import">Importuj plan zajęć (.ics)</a>
+    }
+</div>
+
+<div class="panel mb-3">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label">Budynek</label>
+            <select id="fBuilding" class="form-select">
+                <option value="">— wszystkie —</option>
+                @foreach (var b in Model.Buildings)
+                {
+                    <option value="@b.Id">@b.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Typ sali</label>
+            <select id="fType" class="form-select">
+                <option value="">— wszystkie —</option>
+                @foreach (var t in Enum.GetValues<RoomType>())
+                {
+                    <option value="@t">@t</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Min. pojemność</label>
+            <input id="fCapacity" type="number" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Wyposażenie</label>
+            <div>
+                @foreach (var e in Model.AllEquipment)
+                {
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input filter-eq" type="checkbox" value="@e.Id" id="ceq-@e.Id" />
+                        <label class="form-check-label small" for="ceq-@e.Id">@e.Name</label>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel">
+    <div id="calendar"></div>
+    <p class="small text-muted mt-3 mb-0">
+        Ciemniejsze wpisy pochodzą z planu zajęć uczelni, niebieskie to rezerwacje użytkowników.
+    </p>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const calendarEl = document.getElementById('calendar');
+
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridWeek',
+                locale: 'pl',
+                firstDay: 1,
+                slotMinTime: '07:00:00',
+                slotMaxTime: '21:00:00',
+                height: 720,
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+                },
+                events: function (info, success, failure) {
+                    const params = new URLSearchParams();
+                    params.append('start', info.startStr);
+                    params.append('end', info.endStr);
+
+                    const building = document.getElementById('fBuilding').value;
+                    const type = document.getElementById('fType').value;
+                    const capacity = document.getElementById('fCapacity').value;
+
+                    if (building) params.append('buildingId', building);
+                    if (type) params.append('type', type);
+                    if (capacity) params.append('minCapacity', capacity);
+                    document.querySelectorAll('.filter-eq:checked')
+                        .forEach(cb => params.append('equipmentIds', cb.value));
+
+                    fetch('@Url.Action("Events", "Calendar")?' + params.toString())
+                        .then(r => r.json())
+                        .then(success)
+                        .catch(failure);
+                },
+                eventClick: function (info) {
+                    const p = info.event.extendedProps;
+                    alert(p.room + '\n' + (p.building || '') + '\n' + info.event.title +
+                          '\nRezerwujący: ' + (p.user || '—'));
+                }
+            });
+
+            calendar.render();
+
+            // Zmiana filtra przeładowuje wydarzenia bez odświeżania strony.
+            ['fBuilding', 'fType', 'fCapacity'].forEach(id =>
+                document.getElementById(id).addEventListener('change', () => calendar.refetchEvents()));
+            document.querySelectorAll('.filter-eq')
+                .forEach(cb => cb.addEventListener('change', () => calendar.refetchEvents()));
+        });
+    </script>
+}
